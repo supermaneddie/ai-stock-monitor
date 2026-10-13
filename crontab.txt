@@ -1,0 +1,9 @@
+# ai-stock-monitor — run every day at 23:00 in the cron daemon's local timezone.
+# Install with: crontab {{ project_absolute_path }}/crontab.txt
+# Cron treats an unescaped % as a newline, so the % in the date command must remain escaped.
+
+SHELL=/bin/bash
+PATH=/usr/local/bin:/usr/bin:/bin
+MAMBA_ROOT_PREFIX=/mnt/micromamba
+
+0 23 * * * cd {{ project_absolute_path }} && /bin/bash -c 'run_date=$(/bin/date +\%F); log_dir="{{ project_absolute_path }}/logs/${run_date}"; /bin/mkdir -p "${log_dir}"; /usr/local/bin/micromamba run -n stock-monitor python {{ project_absolute_path }}/stock_news_monitor.py --config {{ project_absolute_path }}/config.yml >"${log_dir}/output.log" 2>"${log_dir}/error.log"'

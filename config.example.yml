@@ -1,0 +1,64 @@
+# Output is relative to the working directory used by cron.
+data_dir: data
+
+rss_channels:
+  - name: Yahoo Finance Top Stories
+    slug: yahoo-finance
+    url: https://finance.yahoo.com/news/rssindex
+  - name: Nasdaq Markets
+    slug: nasdaq-markets
+    url: https://www.nasdaq.com/feed/rssoutbound?category=Markets
+
+# Use an exchange prefix so similarly named securities are unambiguous.
+stocks:
+  - NASDAQ:NVDA
+  - NASDAQ:MSFT
+
+fetch:
+  max_items_per_feed: 30
+  timeout_seconds: 30
+  user_agent: ai-stock-monitor/1.0 (+your-email@example.com)
+
+llm:
+  # OpenAI-compatible API root. The program appends /chat/completions.
+  base_url: https://api.openai.com/v1
+  model_name: gpt-4.1-mini
+  # Optional. Omit this setting for an endpoint that needs no authentication.
+  # When configured but the environment variable is absent, no Authorization
+  # header is sent.
+  api_key_env: OPENAI_API_KEY
+  timeout_seconds: 120
+  temperature: 0.2
+  max_input_chars: 50000
+  summary_prompt: |
+    You are a careful financial-news editor. Summarize only the supplied feed items.
+    Prioritize market-moving facts, company events, earnings, guidance, regulation,
+    macroeconomic developments, and risks. Use concise Markdown with: (1) Key
+    developments, (2) Companies/tickers mentioned, (3) Potential market impact.
+    Include article URLs beside relevant claims. Distinguish facts from opinions,
+    do not invent missing details, and note conflicting or uncertain information.
+
+advice:
+  # Summaries from all successful channels and earlier combined advice from this
+  # window are supplied to one LLM request.
+  history_days: 30
+  # BCP 47 language tag for the complete advice response, e.g. en, zh-HK, ja-JP.
+  language: zh-HK
+  prompt: |
+    You are a cautious equity research assistant. Analyze only the supplied dated
+    news summaries from all successful channels. First assess the overall market
+    sentiment as bullish, neutral, bearish, or mixed; give its intensity (1-5) and
+    confidence (low/medium/high). Explain the main macro, sector, risk-appetite, and
+    event drivers, citing their dates and sources.
+
+    For every requested stock provide: relevant developments; news sentiment
+    (bullish/neutral/bearish/mixed); a sentiment score from -2 (strongly bearish) to
+    +2 (strongly bullish); confidence; bullish and bearish evidence; near-term
+    catalysts and risks; important unknowns; and a watch/positive/negative stance.
+    Identify changes versus previous advice when available. Reconcile conflicting
+    reports explicitly, avoid double-counting the same story across channels, and
+    distinguish broad market sentiment from company-specific sentiment. Do not infer
+    investor positioning or price action unless the supplied news states it. Never
+    fabricate prices, fundamentals, events, or consensus. This is news-based research,
+    not personalized financial advice; finish with a brief risk disclaimer. Follow
+    the response language specified in the user message.

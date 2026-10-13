@@ -1,0 +1,1 @@
+"""Stock monitor test suite."""
